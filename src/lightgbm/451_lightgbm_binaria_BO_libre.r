@@ -35,7 +35,7 @@ PARAM <- list()
 
 PARAM$experimento <- "HT4510_libre"
 
-PARAM$input$dataset <- "~/datasets/dataset_pequeno.csv"
+PARAM$input$dataset <- "./datasets/dataset_pequeno.csv"
 PARAM$input$training <- c(202107) # los meses en los que vamos a entrenar
 
 # un undersampling de 0.1  toma solo el 10% de los CONTINUA
@@ -51,16 +51,15 @@ PARAM$hyperparametertuning$NEG_ganancia <- -3000
 
 # Aqui se cargan los bordes de los hiperparametros
 hs <- makeParamSet(
-  makeNumericParam("max_bin" , lower = 31, upper = 31),
-  makeNumericParam("max_depth" , lower = -1.0, upper = 20),
+  makeIntegerParam("max_depth" , lower = -1, upper = 20),
   makeNumericParam("lambda_l1" , lower = 0.00, upper = 1),
   makeNumericParam("lambda_l2" , lower = 0.00, upper = 1),
   makeNumericParam("min_gain_to_split" , lower = 0.00, upper = 1),
   makeNumericParam("learning_rate", lower = 0.01, upper = 0.3),
   makeNumericParam("feature_fraction", lower = 0.2, upper = 1.0),
-  makeIntegerParam("min_data_in_leaf", lower = 1L, upper = 8000L),
-  makeIntegerParam("num_leaves", lower = 16L, upper = 1024L),
-  makeIntegerParam("envios", lower = 5000L, upper = 15000L)
+  makeIntegerParam("min_data_in_leaf", lower = 15L, upper = 800L),
+  makeIntegerParam("num_leaves", lower = 20L, upper = 500L),
+  makeIntegerParam("envios", lower = 5000L, upper = 12000L)
 )
 
 #------------------------------------------------------------------------------
@@ -72,24 +71,24 @@ loguear <- function(
     ext = ".txt", verbose = TRUE) {
   archivo <- arch
   if (is.na(arch)) archivo <- paste0(folder, substitute(reg), ext)
-
+  
   if (!file.exists(archivo)) # Escribo los titulos
-    {
-      linea <- paste0(
-        "fecha\t",
-        paste(list.names(reg), collapse = "\t"), "\n"
-      )
-
-      cat(linea, file = archivo)
-    }
-
+  {
+    linea <- paste0(
+      "fecha\t",
+      paste(list.names(reg), collapse = "\t"), "\n"
+    )
+    
+    cat(linea, file = archivo)
+  }
+  
   linea <- paste0(
     format(Sys.time(), "%Y%m%d %H%M%S"), "\t", # la fecha y hora
     gsub(", ", "\t", toString(reg)), "\n"
   )
-
+  
   cat(linea, file = archivo, append = TRUE) # grabo al archivo
-
+  
   if (verbose) cat(linea) # imprimo por pantalla
 }
 #------------------------------------------------------------------------------
@@ -98,19 +97,19 @@ loguear <- function(
 
 fganancia_logistic_lightgbm <- function(probs, datos) {
   vpesos <- get_field(datos, "weight")
-
+  
   # vector de ganancias
   vgan <- ifelse(vpesos == 1.0000002, PARAM$hyperparametertuning$POS_ganancia,
-    ifelse(vpesos == 1.0000001, PARAM$hyperparametertuning$NEG_ganancia,
-      PARAM$hyperparametertuning$NEG_ganancia /
-        PARAM$trainingstrategy$undersampling
-    )
+                 ifelse(vpesos == 1.0000001, PARAM$hyperparametertuning$NEG_ganancia,
+                        PARAM$hyperparametertuning$NEG_ganancia /
+                          PARAM$trainingstrategy$undersampling
+                 )
   )
-
+  
   tbl <- as.data.table(list("vprobs" = probs, "vgan" = vgan))
   setorder(tbl, -vprobs)
   ganancia <- tbl[1:GLOBAL_envios, sum(vgan)]
-
+  
   return(list(
     "name" = "ganancia",
     "value" = ganancia,
@@ -125,17 +124,17 @@ fganancia_logistic_lightgbm <- function(probs, datos) {
 
 EstimarGanancia_lightgbm <- function(x) {
   gc() # libero memoria
-
+  
   # llevo el registro de la iteracion por la que voy
   GLOBAL_iteracion <<- GLOBAL_iteracion + 1
-
+  
   # para usar en fganancia_logistic_lightgbm
   # asigno la variable global
   GLOBAL_envios <<- as.integer(x$envios / PARAM$hyperparametertuning$xval_folds)
-
+  
   # cantidad de folds para cross validation
   kfolds <- PARAM$hyperparametertuning$xval_folds
-
+  
   param_basicos <- list(
     objective = "binary",
     metric = "custom",
@@ -143,24 +142,20 @@ EstimarGanancia_lightgbm <- function(x) {
     boost_from_average = TRUE,
     feature_pre_filter = FALSE,
     verbosity = -100,
-    max_depth = -1, # -1 significa no limitar,  por ahora lo dejo fijo
-    min_gain_to_split = 0.0, # por ahora, lo dejo fijo
-    lambda_l1 = 0.0, # por ahora, lo dejo fijo
-    lambda_l2 = 0.0, # por ahora, lo dejo fijo
     max_bin = 31, # por ahora, lo dejo fijo
     num_iterations = 9999, # valor grande, lo limita early_stopping_rounds
     force_row_wise = TRUE, # para evitar warning
     seed = ksemilla_azar1
   )
-
+  
   # el parametro discolo, que depende de otro
   param_variable <- list(
     early_stopping_rounds =
       as.integer(50 + 5 / x$learning_rate)
   )
-
+  
   param_completo <- c(param_basicos, param_variable, x)
-
+  
   set.seed(ksemilla_azar1)
   modelocv <- lgb.cv(
     data = dtrain,
@@ -170,29 +165,29 @@ EstimarGanancia_lightgbm <- function(x) {
     param = param_completo,
     verbose = -100
   )
-
+  
   # obtengo la ganancia
   ganancia <- unlist(modelocv$record_evals$valid$ganancia$eval)[modelocv$best_iter]
-
+  
   ganancia_normalizada <- ganancia * kfolds # normailizo la ganancia
-
+  
   # asigno el mejor num_iterations
   param_completo$num_iterations <- modelocv$best_iter
   # elimino de la lista el componente
   param_completo["early_stopping_rounds"] <- NULL
-
-
+  
+  
   # el lenguaje R permite asignarle ATRIBUTOS a cualquier variable
   # esta es la forma de devolver un parametro extra
   attr(ganancia_normalizada, "extras") <-
     list("num_iterations" = modelocv$best_iter)
-
+  
   # logueo
   xx <- param_completo
   xx$ganancia <- ganancia_normalizada # le agrego la ganancia
   xx$iteracion <- GLOBAL_iteracion
   loguear(xx, arch = klog)
-
+  
   # Voy registrando la importancia de variables
   if (ganancia_normalizada > GLOBAL_gananciamax) {
     GLOBAL_gananciamax <<- ganancia_normalizada
@@ -201,16 +196,16 @@ EstimarGanancia_lightgbm <- function(x) {
       param = param_completo,
       verbose = -100
     )
-
+    
     tb_importancia <- as.data.table(lgb.importance(modelo))
     archivo_importancia <- paste0("impo_", GLOBAL_iteracion, ".txt")
     fwrite(tb_importancia,
-      file = archivo_importancia,
-      sep = "\t" )
-
+           file = archivo_importancia,
+           sep = "\t" )
+    
     loguear(xx, arch = klog_mejor)
   }
-
+  
   return(ganancia_normalizada)
 }
 #------------------------------------------------------------------------------

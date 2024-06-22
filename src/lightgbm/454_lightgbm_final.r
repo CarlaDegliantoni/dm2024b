@@ -11,17 +11,20 @@ require("lightgbm")
 # defino los parametros de la corrida, en una lista, la variable global  PARAM
 #  muy pronto esto se leera desde un archivo formato .yaml
 PARAM <- list()
-PARAM$experimento <- "KA4540"
+PARAM$experimento <- "KA4540_libre"
 
 PARAM$input$dataset <- "~/datasets/dataset_pequeno.csv"
 PARAM$input$training <- c(202107) # meses donde se entrena el modelo
 PARAM$input$future <- c(202109) # meses donde se aplica el modelo
 
-
-PARAM$finalmodel$num_iterations <- 169
-PARAM$finalmodel$learning_rate <- 0.0739469150290582
-PARAM$finalmodel$feature_fraction <- 0.23244334357073
-PARAM$finalmodel$min_data_in_leaf <- 1540
+PARAM$finalmodel$max_depth <- 18
+PARAM$finalmodel$lambda_l1 <- 0.126094190140039
+PARAM$finalmodel$lambda_l2 <- 0.643292185374792
+PARAM$finalmodel$min_gain_to_split <- 0.40394951601973
+PARAM$finalmodel$num_iterations <- 283
+PARAM$finalmodel$learning_rate <- 0.0240998836825399
+PARAM$finalmodel$feature_fraction <- 0.60399795210717
+PARAM$finalmodel$min_data_in_leaf <- 356
 PARAM$finalmodel$num_leaves <- 254
 
 
@@ -84,6 +87,10 @@ modelo <- lgb.train(
   param = list(
     objective = "binary",
     max_bin = PARAM$finalmodel$max_bin,
+    max_depth = PARAM$finalmodel$max_depth,
+    lambda_l1 = PARAM$finalmodel$lambda_l1,
+    lambda_l2 = PARAM$finalmodel$lambda_l2,
+    min_gain_to_split = PARAM$finalmodel$min_gain_to_split,
     learning_rate = PARAM$finalmodel$learning_rate,
     num_iterations = PARAM$finalmodel$num_iterations,
     num_leaves = PARAM$finalmodel$num_leaves,
