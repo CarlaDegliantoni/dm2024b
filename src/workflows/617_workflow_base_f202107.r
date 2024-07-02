@@ -353,7 +353,7 @@ ZZ_final_base7 <- function( pinputexps )
 {
   if( -1 == (param_local <- exp_init())$resultado ) return( 0 )# linea fija
 
-  param_local$meta$script <- "/src/wf-etapas/591_ZZ_final.r"
+  param_local$meta$script <- "/src/wf-etapas/z591_ZZ_final.r"
 
   # Que modelos quiero, segun su posicion en el ranking de la Bayesian Optimizacion, ordenado por metrica descendente
   param_local$modelos_rank <- c(1)
