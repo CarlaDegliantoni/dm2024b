@@ -101,7 +101,7 @@ cppFunction("NumericVector fhistC(NumericVector pcolumna, IntegerVector pdesde )
 # La funcionalidad de ratioavg es autoria de  Daiana Sparta,  UAustral  2021
 
 TendenciaYmuchomas <- function(
-    dataset, cols, ventana = 9, tendencia = TRUE,
+    dataset, cols, ventana = 6, tendencia = TRUE,
     minimo = TRUE, maximo = TRUE, promedio = TRUE,
     ratioavg = FALSE, ratiomax = FALSE) {
   gc()
@@ -312,23 +312,6 @@ cols_lagueables <- intersect(cols_lagueables, colnames(dataset))
 if (envg$PARAM$lag6) {
   cat( "Inicio lag6\n")
   # creo los campos lags de orden 6
-  envg$OUTPUT$lag4$ncol_antes <- ncol(dataset)
-  dataset[, paste0(cols_lagueables, "_lag4") := shift(.SD, 6, NA, "lag"),
-          by = eval(envg$PARAM$dataset_metadata$entity_id),
-          .SDcols = cols_lagueables
-  ]
-  
-  
-  envg$OUTPUT$lag6$ncol_despues <- ncol(dataset)
-  GrabarOutput()
-  cat( "Fin lag6\n")
-}
-
-
-cols_lagueables <- intersect(cols_lagueables, colnames(dataset))
-if (envg$PARAM$lag6) {
-  cat( "Inicio lag6\n")
-  # creo los campos lags de orden 6
   envg$OUTPUT$lag6$ncol_antes <- ncol(dataset)
   dataset[, paste0(cols_lagueables, "_lag6") := shift(.SD, 6, NA, "lag"),
           by = eval(envg$PARAM$dataset_metadata$entity_id),
@@ -340,6 +323,9 @@ if (envg$PARAM$lag6) {
   GrabarOutput()
   cat( "Fin lag6\n")
 }
+
+
+
 #--------------------------------------
 # agrego las tendencias
 
