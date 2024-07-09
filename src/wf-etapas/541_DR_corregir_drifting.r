@@ -257,7 +257,7 @@ switch(envg$PARAM$metodo,
   "estandarizar"   = drift_estandarizar(campos_monetarios),
   "dolar_blue"     = drift_dolarblue(campos_monetarios),
   "uva"            = drift_uva(campos_monetarios),
-  "salario_real"   = drift_salarioreal(campos_monetiaros)
+  "salario_real"   = drift_salarioreal(campos_monetarios)
 )
 
 
