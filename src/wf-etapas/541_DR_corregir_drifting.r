@@ -101,7 +101,7 @@ drift_uva <- function(campos_monetarios) {
 # salario promedio desde enero 2020 a sept 2021, se usa indice de infla del drift de ipc
 
 drift_salarioreal <- function(campos_monetarios) {
-  cat( "inicio drift_salarioreal()\n")
+  cat( "inicio drift_salarioreal ()\n")
   vfoto_mes <- c(
     201901, 201902, 201903, 201904, 201905, 201906,
     201907, 201908, 201909, 201910, 201911, 201912,
