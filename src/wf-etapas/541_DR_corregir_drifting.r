@@ -96,6 +96,41 @@ drift_uva <- function(campos_monetarios) {
   
   cat( "fin drift_uva()\n")
 }
+#------------------------------------------------------------------------------
+# deflaciona por indice de salario real (SIPA promedio/IPC)
+# salario promedio desde enero 2020 a sept 2021, se usa indice de infla del drift de ipc
+
+drift_salarioreal <- function(campos_monetarios) {
+  cat( "inicio drift_salarioreal()\n")
+  vfoto_mes <- c(
+    201901, 201902, 201903, 201904, 201905, 201906,
+    201907, 201908, 201909, 201910, 201911, 201912,
+    202001, 202002, 202003, 202004, 202005, 202006,
+    202007, 202008, 202009, 202010, 202011, 202012,
+    202101, 202102, 202103, 202104, 202105, 202106,
+    202107, 202108, 202109
+  )
+  
+  vSR <- c(1,1.064607944,1.161835266,1.216679803,1.314210718,1.392122672,
+           1.471754998,1.585088539,1.73159459,1.879325429,1.994335994,2.108271645,	
+           2.273374068,2.377853641,2.525872287,2.454551044,2.537074024,2.729721561,	
+           2.805056901,2.967679258,3.146620949,3.404625747,3.608135808,3.828756021,	
+           0.415972634,0.451812417,0.487439026,0.525432352,0.56278484,0.605022765,	
+           0.660326588,0.694576723,0.741393513
+  )
+  
+  tb_SR <- as.data.table( list( vfoto_mes, vSR) )
+  
+  colnames( tb_SR ) <- c( envg$PARAM$dataset_metadata$periodo, "SR" )
+  
+  dataset[tb_SR,
+          on = c(envg$PARAM$dataset_metadata$periodo),
+          (campos_monetarios) := .SD * i.SR,
+          .SDcols = campos_monetarios
+  ]
+  
+  cat( "fin drift_salarioreal()\n")
+}
 
 #------------------------------------------------------------------------------
 # ajustar por Dolar Blue
@@ -186,7 +221,7 @@ drift_estandarizar <- function(campos_drift) {
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 # Aqui comienza el programa
-cat( "z541_DR_corregir_drifting.r  START\n")
+cat( "541_DR_corregir_drifting.r  START\n")
 action_inicializar() 
 
 # cargo el dataset donde voy a entrenar
@@ -221,7 +256,8 @@ switch(envg$PARAM$metodo,
   "deflacion"      = drift_deflacion(campos_monetarios),
   "estandarizar"   = drift_estandarizar(campos_monetarios),
   "dolar_blue"     = drift_dolarblue(campos_monetarios),
-  "uva"            = drift_uva(campos_monetarios)
+  "uva"            = drift_uva(campos_monetarios),
+  "salario_real"   = drift_salarioreal(campos_monetiaros)
 )
 
 
