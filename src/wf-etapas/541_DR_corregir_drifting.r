@@ -58,7 +58,42 @@ drift_deflacion <- function(campos_monetarios) {
 }
 
 #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# ajustar por Dolar Blue
+# se toma el valor del primer dia habil
 
+dolar_blue <- function(campos_monetarios) {
+  cat( "inicio dolar_blue()\n")
+  vfoto_mes <- c(
+    201901, 201902, 201903, 201904, 201905, 201906,
+    201907, 201908, 201909, 201910, 201911, 201912,
+    202001, 202002, 202003, 202004, 202005, 202006,
+    202007, 202008, 202009, 202010, 202011, 202012,
+    202101, 202102, 202103, 202104, 202105, 202106,
+    202107, 202108, 202109
+  )
+  
+  vDB <- c(	40.5,	37.75,39,43.5,46.25,46.1,
+            43.45,45.43,63.5,61.5,67.5,68.25,
+            77,78,78.5,83.5,120,128,	
+            128,136,133,150,168,153,
+            160,153,146,140,153,155,
+            169,180.5,181)
+  
+  tb_DB <- as.data.table( list( vfoto_mes, vDB) )
+  
+  colnames( tb_DB ) <- c( envg$PARAM$dataset_metadata$periodo, "DB" )
+  
+  dataset[tb_DB,
+          on = c(envg$PARAM$dataset_metadata$periodo),
+          (campos_monetarios) := .SD / i.DB,
+          .SDcols = campos_monetarios
+  ]
+  
+  cat( "fin dolar_blue()\n")
+}
+
+#--------------------------------------------------------------
 drift_rank_simple <- function(campos_drift) {
   
   cat( "inicio drift_rank_simple()\n")
