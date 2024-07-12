@@ -261,12 +261,16 @@ TS_strategy_base9 <- function( pinputexps )
 
 
   param_local$future <- c(202109)
-  param_local$final_train <- c(202007,	202008,	202009,	202010,	202011,	202012,
-    202101,	202102,	202103,	202104,	202105,	202106)
+  param_local$final_train <- c(202003,	202004,	202005, 202006,
+                               202007,	202008,	202009,	202010,	
+                               202011,	202012, 202101,	202102,	
+                               202103,	202104,	202105,	202106)
 
 
-  param_local$train$training <- c(202003,	202004,	202005,	202006,	202007,	
-     202008,	202009,	202010,	202011,	202012,	202101,	202102)
+  param_local$train$training <- c(201911, 201912, 202001, 202002,
+                                  202003, 202004, 202005, 202006,	
+                                  202007,	202008,	202009,	202010,	
+                                  202011,	202012,	202101,	202102)
   param_local$train$validation <- c(202104)
   param_local$train$testing <- c(202106, 202107, 202108)
 
@@ -392,10 +396,10 @@ wf_sept <- function( pnombrewf )
   DT_incorporar_dataset_competencia2024()
   CA_catastrophe_base( metodo="MachineLearning")
   FEintra_base()
-  DR_drifting_base(metodo="salario_real")
+  DR_drifting_base(metodo="uva")
   FEhist_base()
   FErf_attributes_base()
-  CN_canaritos_asesinos_base(ratio=0.2, desvio=4.0)
+  CN_canaritos_asesinos_base(ratio=1.5, desvio=1.5)
 
   ts9 <- TS_strategy_base9()
   ht <- HT_tuning_base()
